@@ -25,7 +25,7 @@ interface Actions {
   setFret: (stepId: string, stringNum: StringNumber, fret: number | null) => void;
 
   // テクニック操作
-  setTechnique: (stepId: string, stringNum: StringNumber, technique: Technique) => void;
+  setTechnique: (stepId: string, stringNum: StringNumber, technique: Technique | null) => void;
 
   // ステップ操作
   addStep: (sectionId: string) => void;
@@ -37,11 +37,7 @@ export const useTabStore = create<State & Actions>((set, get) => ({
   cursor: { sectionId: '', step: 0, string: 1 },
 
   loadSong: async (id) => {
-    const { data, error } = await supabase
-      .from('songs')
-      .select('*')
-      .eq('id', id)
-      .single();
+    const { data, error } = await supabase.from('songs').select('*').eq('id', id).single();
     if (error || !data) return;
     const song: Song = {
       ...data,
@@ -73,9 +69,7 @@ export const useTabStore = create<State & Actions>((set, get) => ({
       const sections = state.currentSong.sections.map((section) => ({
         ...section,
         steps: section.steps.map((step) =>
-          step.id === stepId
-            ? { ...step, strings: { ...step.strings, [stringNum]: fret } }
-            : step
+          step.id === stepId ? { ...step, strings: { ...step.strings, [stringNum]: fret } } : step
         ),
       }));
       return { currentSong: { ...state.currentSong, sections } };
