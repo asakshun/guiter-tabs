@@ -14,6 +14,9 @@ interface State {
 }
 
 interface Actions {
+  // ローカル初期化（Supabase なしで動作させる）
+  initSong: (song: Song) => void;
+
   // Supabase との通信
   loadSong: (id: string) => Promise<void>;
   saveSong: () => Promise<void>;
@@ -34,27 +37,41 @@ interface Actions {
 
 export const useTabStore = create<State & Actions>((set, get) => ({
   currentSong: null,
-  cursor: { sectionId: '', step: 0, string: 1 },
+  cursor: { sectionId: '', step: 0, string: 5 },
+
+  initSong: (song) => {
+    set({
+      currentSong: song,
+      cursor: {
+        sectionId: song.sections[0]?.id ?? '',
+        step: 0,
+        string: 5,
+      },
+    });
+  },
 
   loadSong: async (id) => {
     const { data, error } = await supabase.from('songs').select('*').eq('id', id).single();
     if (error || !data) return;
     const song: Song = {
       ...data,
-      sections: data.data, // JSONB カラムから sections を取得
+      sections: data.data,
     };
-    set({ currentSong: song });
+    set({
+      currentSong: song,
+      cursor: { sectionId: song.sections[0]?.id ?? '', step: 0, string: 5 },
+    });
   },
 
   saveSong: async () => {
     const { currentSong } = get();
-    if (!currentSong) return;
+    if (!currentSong || currentSong.id === 'mock') return;
     await supabase.from('songs').upsert({
       id: currentSong.id,
       title: currentSong.title,
       artist: currentSong.artist,
       tuning: currentSong.tuning,
-      data: currentSong.sections, // sections を JSONB に格納
+      data: currentSong.sections,
       updated_at: new Date().toISOString(),
     });
   },
@@ -74,7 +91,6 @@ export const useTabStore = create<State & Actions>((set, get) => ({
       }));
       return { currentSong: { ...state.currentSong, sections } };
     });
-    // 500ms debounce で保存（簡易実装）
     setTimeout(() => get().saveSong(), 500);
   },
 
@@ -108,11 +124,16 @@ export const useTabStore = create<State & Actions>((set, get) => ({
         const newStep = {
           id: crypto.randomUUID(),
           index: section.steps.length,
-          strings: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null },
+          strings: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null } as Record<StringNumber, number | null>,
         };
         return { ...section, steps: [...section.steps, newStep] };
       });
-      return { currentSong: { ...state.currentSong, sections } };
+      const targetSection = sections.find((s) => s.id === sectionId);
+      const newStepIndex = targetSection ? targetSection.steps.length - 1 : state.cursor.step;
+      return {
+        currentSong: { ...state.currentSong, sections },
+        cursor: { ...state.cursor, sectionId, step: newStepIndex },
+      };
     });
     setTimeout(() => get().saveSong(), 500);
   },
