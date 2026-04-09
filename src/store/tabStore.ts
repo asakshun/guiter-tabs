@@ -35,6 +35,10 @@ interface Actions {
   removeStep: (sectionId: string, stepId: string) => void;
 }
 
+// 「グローバルな箱」へアクセスするためのカスタムフック
+// 使う側は、箱のどこを見るかを引数（セレクター）で指定する
+// 例: const currentSong = useTabStore((state) => state.currentSong);
+// stateがセレクター。stateに箱の中身全体が入っているイメージ
 export const useTabStore = create<State & Actions>((set, get) => ({
   currentSong: null,
   cursor: { sectionId: '', step: 0, string: 5 },
@@ -124,7 +128,10 @@ export const useTabStore = create<State & Actions>((set, get) => ({
         const newStep = {
           id: crypto.randomUUID(),
           index: section.steps.length,
-          strings: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null } as Record<StringNumber, number | null>,
+          strings: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null } as Record<
+            StringNumber,
+            number | null
+          >,
         };
         return { ...section, steps: [...section.steps, newStep] };
       });
