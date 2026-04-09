@@ -4,21 +4,22 @@
 
 ギターのタブ譜を記録するWebアプリ。個人利用・MVP。  
 楽譜の知識がなくても使えるシンプルさを最優先にしている。
+収益化を前提としている。
 
 ---
 
 ## 技術スタック
 
-| 項目 | 採用技術 |
-|------|---------|
-| フレームワーク | Next.js (App Router) |
-| スタイリング | Tailwind CSS |
-| 状態管理 | Zustand |
-| タブ譜描画 | HTMLグリッド自前描画（VexFlowは使わない） |
-| データ保存 | Supabase（Postgres） + Zustand（メモリキャッシュ） |
-| ホスティング | Vercel |
-| パッケージ管理 | pnpm |
-| 言語 | TypeScript |
+| 項目           | 採用技術                                           |
+| -------------- | -------------------------------------------------- |
+| フレームワーク | Next.js (App Router)                               |
+| スタイリング   | Tailwind CSS                                       |
+| 状態管理       | Zustand                                            |
+| タブ譜描画     | HTMLグリッド自前描画（VexFlowは使わない）          |
+| データ保存     | Supabase（Postgres） + Zustand（メモリキャッシュ） |
+| ホスティング   | Vercel                                             |
+| パッケージ管理 | pnpm                                               |
+| 言語           | TypeScript                                         |
 
 **VexFlowを使わない理由**: VexFlowは音価（音符の長さ）が前提の設計。このアプリは音価不要なので、シンプルにHTMLグリッドで自前描画した方が実装もっとシンプルになる。
 
@@ -33,6 +34,45 @@
 
 ---
 
+## ターゲット・競合・ポジショニング
+
+### ターゲット
+- 中級以上のギタリスト（耳コピをする層）
+- 日本の推定人口：数十万人規模
+
+### 競合との差別化
+
+| ツール          | 耳コピ中のメモとして使うと         |
+| --------------- | ---------------------------------- |
+| Guitar Pro      | 起動が重い、設定が多すぎる         |
+| Ultimate Guitar | 閲覧専用、編集できない             |
+| メモ帳・紙      | 書けるが後で読み返せない           |
+| このアプリ      | **耳コピ中の素早いメモに特化**     |
+
+**音価省略が正解な理由**：耳コピ中はリズムより音程の方が先にわかることが多い。「何弦何フレット」が先で、拍は後から体で覚える。だから音価不要はこのユーザーにとってメリット。
+
+### 刺さる追加機能
+- **参照音源リンクの添付**（YouTubeリンクなど）→ タブ譜 + 音源をセットで保存 → 見返したとき音源と照合できる → 再現性の問題がほぼ解決
+
+---
+
+## 収益化戦略
+
+### 最短ルート
+1. Vercelでとにかく公開する
+2. Twitter（X）のギター垢・耳コピ勢に紹介（「耳コピしたフレーズをすぐメモれるアプリ作った」）
+3. 無料で使ってもらってフィードバック収集
+4. 保存上限・共有機能を有料化
+
+### コンテンツ戦略
+- Noteアカウントで「耳コピ勢エンジニアが作ったツール」という文脈で記事を書く
+- 作者が当事者（ギタリスト×エンジニア）というのは最強の説得力
+
+### 目標
+- 月200人の有料ユーザー獲得が現実的ライン
+
+---
+
 ## データモデル
 
 ### 階層構造
@@ -43,178 +83,3 @@ Song
         └── Step（1タイミング = ピックを1回振る瞬間）
               └── strings: { 1: fret | null, 2: fret | null, ... 6: fret | null }
 ```
-
-### TypeScript型定義（予定）
-
-```ts
-type Technique = 'h' | 'p' | 'b' | 's' | 'v' | 'x' | 't';
-// h=hammer-on, p=pull-off, b=bend, s=slide, v=vibrato, x=mute, t=tap
-
-interface Step {
-  id: string;
-  index: number;
-  strings: Record<1|2|3|4|5|6, number | null>; // number = フレット番号(0-24), null = 鳴らさない
-  techniques?: Partial<Record<1|2|3|4|5|6, Technique>>;
-}
-
-interface Section {
-  id: string;
-  index: number;
-  label: string; // "イントロ", "サビ" など自由入力
-  steps: Step[];
-}
-
-interface Song {
-  id: string;
-  title: string;
-  artist: string;
-  tuning: string; // "EADGBe"（標準）, "DADGBe"（ドロップD）など
-  createdAt: string; // ISO8601
-  updatedAt: string;
-  sections: Section[];
-}
-```
-
-### JSONサンプル
-
-```json
-{
-  "id": "song_abc123",
-  "title": "夜に駆ける",
-  "artist": "YOASOBI",
-  "tuning": "EADGBe",
-  "createdAt": "2026-03-16T00:00:00Z",
-  "updatedAt": "2026-03-16T00:00:00Z",
-  "sections": [
-    {
-      "id": "sec_001",
-      "index": 0,
-      "label": "イントロ",
-      "steps": [
-        {
-          "id": "step_001",
-          "index": 0,
-          "strings": { "1": null, "2": null, "3": null, "4": null, "5": 0, "6": null }
-        },
-        {
-          "id": "step_002",
-          "index": 1,
-          "strings": { "1": null, "2": null, "3": 2, "4": null, "5": null, "6": null },
-          "techniques": { "3": "h" }
-        }
-      ]
-    }
-  ]
-}
-```
-
----
-
-## データ保存戦略
-
-### 構成
-
-```
-Zustand（メモリ上）
-  ↕ 読み書き（即時）
-Supabase / Postgres（クラウド永続化）
-  ↕ upsert（500ms debounce）
-Vercel（ホスティング）
-```
-
-### Supabase テーブル設計
-
-```sql
-CREATE TABLE songs (
-  id TEXT PRIMARY KEY,
-  user_id UUID REFERENCES auth.users,
-  title TEXT,
-  artist TEXT,
-  tuning TEXT,
-  data JSONB,  -- sections[] ごとまるごと格納
-  created_at TIMESTAMPTZ DEFAULT now(),
-  updated_at TIMESTAMPTZ DEFAULT now()
-);
-```
-
-`sections` 以下の構造（Section / Step）は `data` カラムに JSONB でまるごと入れる。TypeScript の型定義を変えなくて済む。
-
-### Zustand の役割
-
-- 今開いている曲のデータをメモリ上に保持（即時描画用）
-- フレット入力のたびに state を更新 → 画面に即反映
-- 500ms debounce 後に Supabase へ upsert
-
-### 曲一覧の取得
-
-```ts
-// 一覧は軽量に（data カラムは取得しない）
-supabase.from('songs').select('id, title, artist, updated_at')
-
-// 曲を開くときだけ全データ取得
-supabase.from('songs').select('*').eq('id', songId).single()
-```
-
----
-
-## UIの仕様
-
-### グリッド表示
-
-- 6弦 × n ステップ のグリッド
-- 弦ラベルは上から 1弦（e）→ 6弦（E）
-- フレット番号が入っているセルはハイライト表示
-- 鳴らさない弦は「·」（ドット）で表示
-- テクニックは右上に小さなバッジで表示（例: `h`）
-
-### キーボード操作
-
-| キー | 動作 |
-|------|------|
-| `←` `→` | ステップ移動（左右） |
-| `↑` `↓` | 弦移動（上下、1弦〜6弦） |
-| `0`〜`9` | フレット番号入力（2桁対応: 600ms待って確定） |
-| `Del` / `Backspace` | カーソルのフレットをクリア |
-| `Tab` | 次のステップへ進む |
-| `h` | hammer-on トグル |
-| `p` | pull-off トグル |
-| `b` | bend トグル |
-| `s` | slide トグル |
-| `v` | vibrato トグル |
-
-### 2桁フレット入力のロジック
-
-```
-数字キーを押す
-  → バッファに追加
-  → 即座にプレビュー表示（仮確定）
-  → 600ms以内にもう1桁押したら2桁として確定
-  → 600ms経過したら1桁で確定 → 次のステップへ自動移動
-```
-
-### セクション
-
-- 任意のラベル（自由入力）
-- セクション単位で追加・削除・並び替え
-- セクションをまたいだカーソル移動は現時点では未実装（MVP外）
-
----
-
-## 実装順序
-
-1. **プロジェクトセットアップ** → Tailwind + Zustand + Supabase クライアント追加
-2. **型定義** → `types/tab.ts` に Song / Section / Step / Technique を定義
-3. **Supabase セットアップ** → テーブル作成・環境変数設定（`.env.local`）
-4. **Zustand store** → `store/tabStore.ts`、Supabase との読み書きロジック付き
-5. **TabGrid コンポーネント** → グリッド描画 + キーボード入力ロジック
-6. **Section コンポーネント** → セクションラベル + TabGrid のラッパー
-7. **Song ページ** → セクション一覧、曲タイトル表示
-8. **曲一覧ページ** → 新規作成・既存曲を開く
-9. **Vercel デプロイ** → 環境変数を Vercel に設定、Supabase と接続確認
-
----
-
-## 参考: モックについて
-
-`public/mock.html` を参照。ブラウザで直接開くと動作確認できる。  
-TabGridコンポーネントの実装は、このモックのJSロジックをそのままReact + TypeScriptに移植する形で進める。
