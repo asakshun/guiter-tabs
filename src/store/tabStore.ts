@@ -33,6 +33,11 @@ interface Actions {
   // ステップ操作
   addStep: (sectionId: string) => void;
   removeStep: (sectionId: string, stepId: string) => void;
+
+  // セクション操作
+  addSection: (label: string) => void;
+  removeSection: (sectionId: string) => void;
+  renameSection: (sectionId: string, label: string) => void;
 }
 
 // 「グローバルな箱」へアクセスするためのカスタムフック
@@ -155,6 +160,61 @@ export const useTabStore = create<State & Actions>((set, get) => ({
           steps: section.steps.filter((step) => step.id !== stepId),
         };
       });
+      return { currentSong: { ...state.currentSong, sections } };
+    });
+    setTimeout(() => get().saveSong(), 500);
+  },
+
+  addSection: (label) => {
+    set((state) => {
+      if (!state.currentSong) return state;
+      const newSection = {
+        id: crypto.randomUUID(),
+        index: state.currentSong.sections.length,
+        label,
+        steps: [
+          {
+            id: crypto.randomUUID(),
+            index: 0,
+            strings: { 1: null, 2: null, 3: null, 4: null, 5: null, 6: null } as Record<
+              StringNumber,
+              number | null
+            >,
+          },
+        ],
+      };
+      const sections = [...state.currentSong.sections, newSection];
+      return {
+        currentSong: { ...state.currentSong, sections },
+        cursor: { sectionId: newSection.id, step: 0, string: state.cursor.string },
+      };
+    });
+    setTimeout(() => get().saveSong(), 500);
+  },
+
+  removeSection: (sectionId) => {
+    set((state) => {
+      if (!state.currentSong) return state;
+      // 最低1セクションのガード
+      if (state.currentSong.sections.length <= 1) return state;
+      const sections = state.currentSong.sections
+        .filter((s) => s.id !== sectionId)
+        .map((s, i) => ({ ...s, index: i }));
+      const newCursorSectionId = sections[0]?.id ?? '';
+      return {
+        currentSong: { ...state.currentSong, sections },
+        cursor: { sectionId: newCursorSectionId, step: 0, string: state.cursor.string },
+      };
+    });
+    setTimeout(() => get().saveSong(), 500);
+  },
+
+  renameSection: (sectionId, label) => {
+    set((state) => {
+      if (!state.currentSong) return state;
+      const sections = state.currentSong.sections.map((s) =>
+        s.id === sectionId ? { ...s, label } : s
+      );
       return { currentSong: { ...state.currentSong, sections } };
     });
     setTimeout(() => get().saveSong(), 500);
