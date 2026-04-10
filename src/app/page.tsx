@@ -51,6 +51,7 @@ export default function Home() {
   const initSong = useTabStore((state) => state.initSong);
   const currentSong = useTabStore((state) => state.currentSong);
   const cursor = useTabStore((state) => state.cursor);
+  const addSection = useTabStore((state) => state.addSection);
 
   useEffect(() => {
     initSong(mockSong);
@@ -79,9 +80,20 @@ export default function Home() {
 
       <div>
         {(currentSong ?? mockSong).sections.map((section) => (
-          <SectionComponent key={section.id} section={section} />
+          <SectionComponent
+            key={section.id}
+            section={section}
+            totalSections={(currentSong ?? mockSong).sections.length}
+          />
         ))}
       </div>
+
+      <button
+        onClick={() => addSection('新しいセクション')}
+        className="mt-2 mb-6 text-xs text-[#888] hover:text-[#333] border border-dashed border-[#d3d1c7] rounded-md px-3 py-1.5 transition-colors"
+      >
+        + セクションを追加
+      </button>
 
       <h2 className="text-xs font-medium text-[#aaa] uppercase tracking-widest mt-7 mb-3">キーボード操作</h2>
       <div className="grid gap-y-1.5 gap-x-3.5 text-xs text-[#888]" style={{ gridTemplateColumns: 'auto 1fr', maxWidth: 480 }}>

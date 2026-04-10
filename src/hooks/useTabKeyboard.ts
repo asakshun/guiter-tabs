@@ -22,6 +22,9 @@ export function useTabKeyboard(song: Song | null) {
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
+      // input要素にフォーカスがある場合はタブ譜操作を無効化
+      if (e.target instanceof HTMLInputElement) return;
+
       const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Delete', 'Backspace', 'Tab'];
       const isNum = /^\d$/.test(e.key);
       const isTech = ['h', 'p', 'b', 's', 'v', 'x', 't'].includes(e.key);
