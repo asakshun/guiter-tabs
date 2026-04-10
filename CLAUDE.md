@@ -83,3 +83,50 @@ Song
         └── Step（1タイミング = ピックを1回振る瞬間）
               └── strings: { 1: fret | null, 2: fret | null, ... 6: fret | null }
 ```
+
+---
+
+## Store 設計ルール（`src/store/` 改修時に必ず読むこと）
+
+### ファイル構成
+
+```
+src/store/
+├── tabStore.ts          ← create() で4スライスを束ねるだけ。ロジックを書かない
+├── slices/
+│   ├── songSlice.ts     ← currentSong / initSong / loadSong / saveSong
+│   ├── cursorSlice.ts   ← cursor / setCursor
+│   ├── stepSlice.ts     ← setFret / setTechnique / addStep / removeStep
+│   └── sectionSlice.ts  ← addSection / removeSection / renameSection
+└── helpers/
+    ├── songMutators.ts  ← sections.map() など副作用のない純粋関数
+    └── persistence.ts   ← Supabase通信 / debouncedSave
+```
+
+### 追加・変更のルール
+
+| やりたいこと | 場所 |
+| --- | --- |
+| 新しいアクションを追加する | 責務に対応するスライスに追加 |
+| 新しい状態の塊を追加する（例: 認証・UI状態） | 新スライスを作り `tabStore.ts` で束ねる |
+| `sections.map()` のロジック | `helpers/songMutators.ts` に純粋関数として切り出す |
+| Supabase 操作を変更・追加する | `helpers/persistence.ts` を編集 |
+| `tabStore.ts` 本体 | スライスの import と spread のみ。ロジックを直接書かない |
+
+### debouncedSave の使い方
+
+各アクションの末尾で直接 `setTimeout` を書かず、必ず `debouncedSave` を使う：
+
+```ts
+// NG
+setTimeout(() => get().saveSong(), 500);
+
+// OK
+import { debouncedSave } from '../helpers/persistence';
+debouncedSave(() => get().saveSong());
+```
+
+### スライス間の依存関係
+
+`stepSlice` と `sectionSlice` は `SongSlice & CursorSlice` に依存している。  
+新しいスライスが他のスライスの状態を参照する場合は、`StateCreator` のジェネリクスに依存先のスライス型を追加する。
