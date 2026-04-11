@@ -7,13 +7,14 @@ import { SectionComponent } from '../components/Section';
 const STRING_NAMES: Record<StringNumber, string> = { 1: 'e', 2: 'B', 3: 'G', 4: 'D', 5: 'A', 6: 'E' };
 
 type Props = {
-  song: Song;
+  song: Song | null;
   cursor: Cursor;
   onSetCursor: (cursor: Partial<Cursor>) => void;
   onAddStep: (sectionId: string) => void;
   onAddSection: (label: string) => void;
   onRemoveSection: (sectionId: string) => void;
   onRenameSection: (sectionId: string, label: string) => void;
+  onBack?: () => void;
 };
 
 export function SongTemplate({
@@ -24,7 +25,15 @@ export function SongTemplate({
   onAddSection,
   onRemoveSection,
   onRenameSection,
+  onBack,
 }: Props) {
+  if (!song) {
+    return (
+      <main className="min-h-screen bg-[#f9f9f7] p-8">
+        <p className="text-sm text-[#888]">読み込み中...</p>
+      </main>
+    );
+  }
   const cursorInfo = (() => {
     const section = song.sections.find((s) => s.id === cursor.sectionId);
     if (!section) return 'クリックまたは矢印キーで操作';
@@ -37,6 +46,14 @@ export function SongTemplate({
 
   return (
     <main className="p-8 bg-[#f9f9f7] min-h-screen">
+      {onBack && (
+        <button
+          onClick={onBack}
+          className="text-xs text-[#888] hover:text-[#333] transition-colors mb-6 block"
+        >
+          ← 一覧へ戻る
+        </button>
+      )}
       <h1 className="text-xl font-medium mb-1">{song.title}</h1>
       <p className="text-sm text-[#888] mb-6">
         {song.artist} · {song.tuning} · チューニング標準

@@ -4,7 +4,7 @@ import { useEffect } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useTabStore } from '../../../store/tabStore';
 import { useTabKeyboard } from '../../../hooks/useTabKeyboard';
-import { SongDetailTemplate } from '../../../templates/SongDetail';
+import { SongTemplate } from '../../../templates/Song';
 
 export default function SongDetailPage() {
   const params = useParams();
@@ -27,7 +27,7 @@ export default function SongDetailPage() {
   useTabKeyboard(currentSong);
 
   return (
-    <SongDetailTemplate
+    <SongTemplate
       song={currentSong}
       cursor={cursor}
       onSetCursor={setCursor}

@@ -173,6 +173,5 @@ export default function FooPage() {
 
 ### 既存Templateの例
 
-- `src/templates/Song.tsx` — 曲編集UI（props: song, cursor, handlers）
+- `src/templates/Song.tsx` — 曲編集UI（props: song, cursor, handlers, onBack?）
 - `src/templates/SongList.tsx` — 曲一覧UI（props: songs, isLoading, onCreateSong, onDeleteSong）
-- `src/templates/SongDetail.tsx` — 曲詳細UI（Song.tsx をラップ + 戻るボタン）
