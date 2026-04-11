@@ -1,10 +1,10 @@
 'use client';
 
 import { useEffect } from 'react';
-import { useTabStore } from '../store/tabStore';
-import { useTabKeyboard } from '../hooks/useTabKeyboard';
-import { SongTemplate } from '../templates/Song';
-import { Song } from '../types/tab';
+import { useTabStore } from '../../store/tabStore';
+import { useTabKeyboard } from '../../hooks/useTabKeyboard';
+import { SongTemplate } from '../../templates/Song';
+import { Song } from '../../types/tab';
 
 const mockSong: Song = {
   id: 'mock',
@@ -50,7 +50,7 @@ const mockSong: Song = {
   ],
 };
 
-export default function Home() {
+export default function SongPage() {
   const initSong = useTabStore((state) => state.initSong);
   const currentSong = useTabStore((state) => state.currentSong);
   const cursor = useTabStore((state) => state.cursor);

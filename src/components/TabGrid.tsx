@@ -1,9 +1,8 @@
 'use client';
 
-import { useTabStore } from '../store/tabStore';
 import { Section, StringNumber } from '../types/tab';
+import { Cursor } from '../store/slices/cursorSlice';
 
-// mock.html の STRING_NAMES と同じ（1弦=e, 6弦=E）
 const STRING_NAMES: Record<StringNumber, string> = {
   1: 'e',
   2: 'B',
@@ -17,17 +16,14 @@ const STRING_NUMBERS: StringNumber[] = [1, 2, 3, 4, 5, 6];
 
 type TabGridProps = {
   section: Section;
+  cursor: Cursor;
+  onSetCursor: (cursor: Partial<Cursor>) => void;
+  onAddStep: (sectionId: string) => void;
 };
 
-export default function TabGrid({ section }: TabGridProps) {
-  const cursor = useTabStore((state) => state.cursor);
-  const setCursor = useTabStore((state) => state.setCursor);
-  const addStep = useTabStore((state) => state.addStep);
-
+export default function TabGrid({ section, cursor, onSetCursor, onAddStep }: TabGridProps) {
   return (
-    <div
-      className="inline-flex flex-col border-[0.5px] border-[#d3d1c7] rounded-lg overflow-hidden"
-    >
+    <div className="inline-flex flex-col border-[0.5px] border-[#d3d1c7] rounded-lg overflow-hidden">
       {STRING_NUMBERS.map((stringNum) => {
         const isFirstRow = stringNum === 1;
         return (
@@ -59,7 +55,7 @@ export default function TabGrid({ section }: TabGridProps) {
                     ].join(' ')}
                     style={isCursor ? { outline: '2px solid #378add', outlineOffset: '-2px', zIndex: 1, borderRadius: 2 } : {}}
                     onClick={() =>
-                      setCursor({ sectionId: section.id, step: step.index, string: stringNum })
+                      onSetCursor({ sectionId: section.id, step: step.index, string: stringNum })
                     }
                   >
                     {fret !== null && fret !== undefined ? (
@@ -79,11 +75,11 @@ export default function TabGrid({ section }: TabGridProps) {
               })}
             </div>
 
-            {/* + ボタン列（1弦行のみテキスト表示） */}
+            {/* + ボタン列（1弦行のみ表示） */}
             <div
               className="w-[30px] min-w-[30px] h-9 flex items-center justify-center border-l-[0.5px] border-[#e0dfd8] bg-white transition-colors duration-75 cursor-pointer text-[#ccc] hover:text-[#888] hover:bg-[#f5f5f2] text-lg select-none"
               title={isFirstRow ? 'ステップを追加' : undefined}
-              onClick={isFirstRow ? () => addStep(section.id) : undefined}
+              onClick={isFirstRow ? () => onAddStep(section.id) : undefined}
             >
               {isFirstRow ? '+' : ''}
             </div>
