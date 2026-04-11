@@ -3,16 +3,30 @@
 import { useState, useRef, useEffect } from 'react';
 import type { Section } from '../types/tab';
 import TabGrid from './TabGrid';
-import { useTabStore } from '../store/tabStore';
+import { Cursor } from '../store/slices/cursorSlice';
 
-type Props = { section: Section; totalSections: number };
+type Props = {
+  section: Section;
+  totalSections: number;
+  cursor: Cursor;
+  onSetCursor: (cursor: Partial<Cursor>) => void;
+  onAddStep: (sectionId: string) => void;
+  onRename: (sectionId: string, label: string) => void;
+  onRemove: (sectionId: string) => void;
+};
 
-export function SectionComponent({ section, totalSections }: Props) {
+export function SectionComponent({
+  section,
+  totalSections,
+  cursor,
+  onSetCursor,
+  onAddStep,
+  onRename,
+  onRemove,
+}: Props) {
   const [isEditing, setIsEditing] = useState(false);
   const [draftLabel, setDraftLabel] = useState(section.label);
   const inputRef = useRef<HTMLInputElement>(null);
-  const renameSection = useTabStore((state) => state.renameSection);
-  const removeSection = useTabStore((state) => state.removeSection);
 
   useEffect(() => {
     if (isEditing) {
@@ -24,7 +38,7 @@ export function SectionComponent({ section, totalSections }: Props) {
   const handleConfirm = () => {
     const trimmed = draftLabel.trim();
     if (trimmed) {
-      renameSection(section.id, trimmed);
+      onRename(section.id, trimmed);
     } else {
       setDraftLabel(section.label);
     }
@@ -61,7 +75,7 @@ export function SectionComponent({ section, totalSections }: Props) {
           </button>
         )}
         <button
-          onClick={() => removeSection(section.id)}
+          onClick={() => onRemove(section.id)}
           disabled={totalSections <= 1}
           title="セクションを削除"
           className="text-[#bbb] hover:text-[#e55] transition-colors disabled:opacity-30 disabled:cursor-not-allowed text-xs leading-none px-1"
@@ -70,7 +84,12 @@ export function SectionComponent({ section, totalSections }: Props) {
         </button>
       </div>
       <div className="overflow-x-auto">
-        <TabGrid section={section} />
+        <TabGrid
+          section={section}
+          cursor={cursor}
+          onSetCursor={onSetCursor}
+          onAddStep={onAddStep}
+        />
       </div>
     </div>
   );

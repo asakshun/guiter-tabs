@@ -2,18 +2,9 @@
 
 import { useEffect } from 'react';
 import { useTabStore } from '../../store/tabStore';
-import { SectionComponent } from '../../components/Section';
 import { useTabKeyboard } from '../../hooks/useTabKeyboard';
-import { Song, StringNumber } from '../../types/tab';
-
-const STRING_NAMES: Record<StringNumber, string> = {
-  1: 'e',
-  2: 'B',
-  3: 'G',
-  4: 'D',
-  5: 'A',
-  6: 'E',
-};
+import { SongTemplate } from '../../templates/Song';
+import { Song } from '../../types/tab';
 
 const mockSong: Song = {
   id: 'mock',
@@ -59,11 +50,15 @@ const mockSong: Song = {
   ],
 };
 
-export default function Home() {
+export default function SongPage() {
   const initSong = useTabStore((state) => state.initSong);
   const currentSong = useTabStore((state) => state.currentSong);
   const cursor = useTabStore((state) => state.cursor);
+  const setCursor = useTabStore((state) => state.setCursor);
+  const addStep = useTabStore((state) => state.addStep);
   const addSection = useTabStore((state) => state.addSection);
+  const removeSection = useTabStore((state) => state.removeSection);
+  const renameSection = useTabStore((state) => state.renameSection);
 
   useEffect(() => {
     initSong(mockSong);
@@ -71,78 +66,17 @@ export default function Home() {
 
   useTabKeyboard(currentSong);
 
-  const cursorInfo = (() => {
-    if (!currentSong) return 'クリックまたは矢印キーで操作';
-    const section = currentSong.sections.find((s) => s.id === cursor.sectionId);
-    if (!section) return 'クリックまたは矢印キーで操作';
-    const step = section.steps[cursor.step];
-    if (!step) return 'クリックまたは矢印キーで操作';
-    const fret = step.strings[cursor.string];
-    const fretStr = fret !== null && fret !== undefined ? `フレット ${fret}` : '(空)';
-    return `${section.label} · ステップ ${cursor.step + 1} · ${cursor.string}弦 (${STRING_NAMES[cursor.string]}) · ${fretStr}`;
-  })();
+  if (!currentSong) return null;
 
   return (
-    <main className="p-8 bg-[#f9f9f7] min-h-screen">
-      <h1 className="text-xl font-medium mb-1">{currentSong?.title ?? '夜に駆ける'}</h1>
-      <p className="text-sm text-[#888] mb-6">
-        {currentSong
-          ? `${currentSong.artist} · ${currentSong.tuning} · チューニング標準`
-          : 'YOASOBI · EADGBe · チューニング標準'}
-      </p>
-      <p className="text-xs text-[#aaa] font-mono mb-4 min-h-[18px]">{cursorInfo}</p>
-
-      <div>
-        {(currentSong ?? mockSong).sections.map((section) => (
-          <SectionComponent
-            key={section.id}
-            section={section}
-            totalSections={(currentSong ?? mockSong).sections.length}
-          />
-        ))}
-      </div>
-
-      <button
-        onClick={() => addSection('新しいセクション')}
-        className="mt-2 mb-6 text-xs text-[#888] hover:text-[#333] border border-dashed border-[#d3d1c7] rounded-md px-3 py-1.5 transition-colors"
-      >
-        + セクションを追加
-      </button>
-
-      <h2 className="text-xs font-medium text-[#aaa] uppercase tracking-widest mt-7 mb-3">
-        キーボード操作
-      </h2>
-      <div
-        className="grid gap-y-1.5 gap-x-3.5 text-xs text-[#888]"
-        style={{ gridTemplateColumns: 'auto 1fr', maxWidth: 480 }}
-      >
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          ← →
-        </span>
-        <span className="flex items-center">ステップ移動</span>
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          ↑ ↓
-        </span>
-        <span className="flex items-center">弦移動（1弦〜6弦）</span>
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          0〜9
-        </span>
-        <span className="flex items-center">フレット番号入力（2桁対応: 12など）</span>
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          Del
-        </span>
-        <span className="flex items-center">フレットをクリア</span>
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          Tab
-        </span>
-        <span className="flex items-center">次のステップへ</span>
-        <span className="font-mono bg-[#f1f0ea] border border-[#d3d1c7] rounded px-1.5 py-0.5 text-[11px] text-[#333] whitespace-nowrap">
-          h p b s v
-        </span>
-        <span className="flex items-center">
-          テクニック（hammer / pull / bend / slide / vibrato）トグル
-        </span>
-      </div>
-    </main>
+    <SongTemplate
+      song={currentSong}
+      cursor={cursor}
+      onSetCursor={setCursor}
+      onAddStep={addStep}
+      onAddSection={addSection}
+      onRemoveSection={removeSection}
+      onRenameSection={renameSection}
+    />
   );
 }
