@@ -17,15 +17,27 @@ export function useTabKeyboard(song: Song | null) {
   const cursorRef = useRef(cursor);
   const songRef = useRef(song);
 
-  useEffect(() => { cursorRef.current = cursor; }, [cursor]);
-  useEffect(() => { songRef.current = song; }, [song]);
+  useEffect(() => {
+    cursorRef.current = cursor;
+  }, [cursor]);
+  useEffect(() => {
+    songRef.current = song;
+  }, [song]);
 
   useEffect(() => {
     const handleKeyDown = (e: KeyboardEvent) => {
       // input要素にフォーカスがある場合はタブ譜操作を無効化
       if (e.target instanceof HTMLInputElement) return;
 
-      const keys = ['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Delete', 'Backspace', 'Tab'];
+      const keys = [
+        'ArrowLeft',
+        'ArrowRight',
+        'ArrowUp',
+        'ArrowDown',
+        'Delete',
+        'Backspace',
+        'Tab',
+      ];
       const isNum = /^\d$/.test(e.key);
       const isTech = ['h', 'p', 'b', 's', 'v', 'x', 't'].includes(e.key);
       if (!keys.includes(e.key) && !isNum && !isTech) return;
@@ -70,7 +82,9 @@ export function useTabKeyboard(song: Song | null) {
         setFret(currentStep.id, cur.string, fret);
         bufferTimer.current = setTimeout(() => {
           inputBuffer.current = '';
-          setCursor({ step: Math.min(cursorRef.current.step + 1, currentSection.steps.length - 1) });
+          setCursor({
+            step: Math.min(cursorRef.current.step + 1, currentSection.steps.length - 1),
+          });
         }, 600);
       } else if (isTech) {
         const currentStep = currentSection.steps[cur.step];
