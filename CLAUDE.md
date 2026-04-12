@@ -130,3 +130,48 @@ debouncedSave(() => get().saveSong());
 
 `stepSlice` と `sectionSlice` は `SongSlice & CursorSlice` に依存している。  
 新しいスライスが他のスライスの状態を参照する場合は、`StateCreator` のジェネリクスに依存先のスライス型を追加する。
+
+---
+
+## ページ・Template 設計ルール（`src/app/` 改修時に必ず読むこと）
+
+### ファイル構成
+
+```
+src/
+├── app/
+│   └── <route>/
+│       └── page.tsx   ← Storeアクセス + Templateへの受け渡しのみ。JSXを直接書かない
+└── templates/
+    └── <PageName>.tsx ← UIロジック全体（useState / useRouter / JSX）を持つ
+```
+
+### ルール
+
+| やりたいこと | 場所 |
+| --- | --- |
+| UIの表示・インタラクション | `src/templates/<PageName>.tsx` に書く |
+| Storeからデータを取得してTemplateに渡す | `src/app/<route>/page.tsx` に書く |
+| ページ固有のUI状態（モーダルの開閉など） | Template内の `useState` で管理 |
+| ルーティング（`useRouter`） | Template内で使う |
+
+### page.tsx の書き方
+
+```tsx
+// NG: page.tsx にJSXを直接書く
+export default function FooPage() {
+  return <main>...</main>;
+}
+
+// OK: Storeだけ触ってTemplateに渡す
+export default function FooPage() {
+  const data = useTabStore((state) => state.data);
+  const action = useTabStore((state) => state.action);
+  return <FooTemplate data={data} onAction={action} />;
+}
+```
+
+### 既存Templateの例
+
+- `src/templates/Song.tsx` — 曲編集UI（props: song, cursor, handlers, onBack?）
+- `src/templates/SongList.tsx` — 曲一覧UI（props: songs, isLoading, onCreateSong, onDeleteSong）
