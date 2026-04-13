@@ -10,9 +10,11 @@ type Props = {
   isLoading: boolean;
   onCreateSong: (title: string) => Promise<string>;
   onDeleteSong: (id: string) => void;
+  userEmail: string | null;
+  onSignOut: () => void;
 };
 
-export function SongListTemplate({ songs, isLoading, onCreateSong, onDeleteSong }: Props) {
+export function SongListTemplate({ songs, isLoading, onCreateSong, onDeleteSong, userEmail, onSignOut }: Props) {
   const router = useRouter();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [newTitle, setNewTitle] = useState('');
@@ -43,12 +45,23 @@ export function SongListTemplate({ songs, isLoading, onCreateSong, onDeleteSong 
       <div className="max-w-2xl mx-auto">
         <div className="flex items-center justify-between mb-8">
           <h1 className="text-xl font-medium text-[#333]">マイタブ譜</h1>
-          <button
-            onClick={() => setIsModalOpen(true)}
-            className="text-sm border border-[#d3d1c7] rounded-md px-4 py-2 text-[#5f5e5a] hover:border-[#b0ada3] hover:text-[#333] transition-colors"
-          >
-            + 新規作成
-          </button>
+          <div className="flex items-center gap-3">
+            {userEmail && (
+              <span className="text-xs text-[#888] hidden sm:block">{userEmail}</span>
+            )}
+            <button
+              onClick={onSignOut}
+              className="text-sm text-[#888] hover:text-[#333] transition-colors"
+            >
+              ログアウト
+            </button>
+            <button
+              onClick={() => setIsModalOpen(true)}
+              className="text-sm border border-[#d3d1c7] rounded-md px-4 py-2 text-[#5f5e5a] hover:border-[#b0ada3] hover:text-[#333] transition-colors"
+            >
+              + 新規作成
+            </button>
+          </div>
         </div>
 
         {isLoading ? (

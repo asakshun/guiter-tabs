@@ -71,6 +71,8 @@ export async function createSong(title: string): Promise<Song> {
     updatedAt: now,
     sections: [defaultSection],
   };
+  const { data: { user } } = await supabase.auth.getUser();
+
   const { error } = await supabase.from('songs').insert({
     id: song.id,
     title: song.title,
@@ -78,6 +80,7 @@ export async function createSong(title: string): Promise<Song> {
     tuning: song.tuning,
     data: song.sections,
     updated_at: now,
+    user_id: user?.id ?? null,
   });
   if (error) throw new Error(`曲の作成に失敗しました: ${error.message}`);
   return song;
